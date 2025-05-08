@@ -27,10 +27,9 @@ public abstract class BankAccount {
     private String currency;
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
-
+    private String description;
     @ManyToOne(fetch = FetchType.EAGER)
     private Customer customer;
-
 
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "bankAccount")
     private List<AccountOperation> operations;
