@@ -22,7 +22,7 @@ public class AccountOperation {
     private double amount;
     @Enumerated(EnumType.STRING)
     private OperationType type;
-
+    private String description;
     @ManyToOne
     private BankAccount bankAccount;
 }

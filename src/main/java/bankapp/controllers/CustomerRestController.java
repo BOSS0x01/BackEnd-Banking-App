@@ -16,11 +16,10 @@ import java.util.List;
 @RequestMapping("/api/customers")
 public class CustomerRestController {
 
-    private final BankAccountMapperImp bankAccountMapperImp;
     private final BankAccountService bankAccountService;
 
     @GetMapping
-    List<CustomerDTO> getAllCustomers() {
+    ResponseEntity<ApiResponse<List<CustomerDTO>>> getAllCustomers() {
         return bankAccountService.getAllCustomers();
     }
 
@@ -31,12 +30,12 @@ public class CustomerRestController {
 
 
     @PostMapping
-    CustomerDTO saveCustomer(@RequestBody CustomerDTO customerDTO) {
+    ResponseEntity<ApiResponse<CustomerDTO>> saveCustomer(@RequestBody CustomerDTO customerDTO) {
         return bankAccountService.saveCustomer(customerDTO);
     }
 
     @PutMapping
-    CustomerDTO updateCustomer(@RequestBody CustomerDTO customerDTO) {
+    ResponseEntity<ApiResponse<CustomerDTO>> updateCustomer(@RequestBody CustomerDTO customerDTO) {
         return bankAccountService.saveCustomer(customerDTO);
     }
 

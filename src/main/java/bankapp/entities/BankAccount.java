@@ -3,13 +3,10 @@ package bankapp.entities;
 import bankapp.enums.AccountStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.Date;
 import java.util.List;
-import java.util.jar.Attributes;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,7 +24,6 @@ public abstract class BankAccount {
     private String currency;
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
-    private String description;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id")
     private Customer customer;

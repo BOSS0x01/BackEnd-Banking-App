@@ -1,6 +1,9 @@
 package bankapp.services;
 
+import bankapp.dtos.BankAccountDTO;
+import bankapp.dtos.CurrentAccountDTO;
 import bankapp.dtos.CustomerDTO;
+import bankapp.dtos.SavingAccountDTO;
 import bankapp.entities.*;
 import bankapp.enums.OperationType;
 import bankapp.exceptions.BalanceNotSufficientException;
@@ -12,6 +15,7 @@ import bankapp.repositories.BankAccountRepository;
 import bankapp.repositories.CustomerRepository;
 import bankapp.utils.ApiResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -33,35 +36,34 @@ public class BankAccountServiceImp implements BankAccountService {
     private final BankAccountMapperImp bankAccountMapperImp;
 
     @Override
-    public CustomerDTO saveCustomer(@RequestBody CustomerDTO customerDTO){
-        Customer customer = customerRepository.save(bankAccountMapperImp.fromCustomerDTO(customerDTO));
-        return bankAccountMapperImp.fromCustomer(customer);
+    public ResponseEntity<ApiResponse<CustomerDTO>> saveCustomer(@RequestBody CustomerDTO customerDTO){
+        Customer customer = customerRepository.save(bankAccountMapperImp.toCustomer(customerDTO));
+        return  ResponseEntity.ok(new ApiResponse<>(true,"Customer found",bankAccountMapperImp.toCustomerDTO(customer))) ;
     }
 
     @Override
-    public List<CustomerDTO> getAllCustomers() {
+    public  ResponseEntity<ApiResponse<List<CustomerDTO>>>  getAllCustomers() {
         List<Customer> customers = customerRepository.findAll();
-        return customers.stream().map(bankAccountMapperImp::fromCustomer).collect(Collectors.toList());
+        List<CustomerDTO> customerDTOS =customers.stream().map(bankAccountMapperImp::toCustomerDTO).toList();
+        return customers.isEmpty()? ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false,"List of customers is empty")):ResponseEntity.ok(new ApiResponse<>(true,"List of customers",customerDTOS)) ;
     }
 
 
     @Override
     public ResponseEntity<ApiResponse<CustomerDTO>> getCustomer(Long customerId) throws CustomerNotFoundException {
-        Customer customer = customerRepository.findById(customerId).orElseThrow(()->
-                new CustomerNotFoundException("Customer not found")
-        );
-        return  ResponseEntity.ok(new ApiResponse<>(true,"Customer found",bankAccountMapperImp.fromCustomer(customer))) ;
+        Customer customer = getCustomerById(customerId);
+        return  ResponseEntity.ok(new ApiResponse<>(true,"Customer found",bankAccountMapperImp.toCustomerDTO(customer))) ;
     }
 
     @Override
     public ResponseEntity<ApiResponse<Void>> deleteCustomer(Long customerId) throws CustomerNotFoundException {
-        Customer customer = customerRepository.findById(customerId).orElseThrow(()-> new CustomerNotFoundException("Customer not found"));
+        Customer customer = getCustomerById(customerId);
         customerRepository.delete(customer);
         return ResponseEntity.ok(new ApiResponse<>(true,"Customer deleted successfully"));
     }
 
     @Override
-    public CurrentAccount saveCurrentAccount(double initialBalance, double overDraft, Long customerId) throws CustomerNotFoundException {
+    public ResponseEntity<ApiResponse<CurrentAccountDTO>>  saveCurrentAccount(double initialBalance, double overDraft, Long customerId) throws CustomerNotFoundException {
 
         Customer customer = customerRepository.findById(customerId).orElseThrow(()-> new CustomerNotFoundException("customer not found"));
         CurrentAccount currentAccount = new CurrentAccount();
@@ -70,11 +72,12 @@ public class BankAccountServiceImp implements BankAccountService {
         currentAccount.setCustomer(customer);
         currentAccount.setOverDraft(overDraft);
 
-        return bankAccountRepository.save(currentAccount);
+        CurrentAccount savedCurrentAccount =  bankAccountRepository.save(currentAccount);
+        return ResponseEntity.ok(new ApiResponse<>(true,"Current account saved successfully",bankAccountMapperImp.toCurrentAccountDTO(savedCurrentAccount)));
     }
 
     @Override
-    public SavingAccount saveSavingAccount(double initialBalance, double interestRate, Long customerId) throws CustomerNotFoundException {
+    public ResponseEntity<ApiResponse<SavingAccountDTO>>  saveSavingAccount(double initialBalance, double interestRate, Long customerId) throws CustomerNotFoundException {
         Customer customer = customerRepository.findById(customerId).orElseThrow(()-> new CustomerNotFoundException("customer not found"));
 
         SavingAccount savingAccount = new SavingAccount();
@@ -83,25 +86,34 @@ public class BankAccountServiceImp implements BankAccountService {
         savingAccount.setCustomer(customer);
         savingAccount.setInterestRate(interestRate);
 
-        return bankAccountRepository.save(savingAccount);
+        SavingAccount savedSavingAccount =  bankAccountRepository.save(savingAccount);
+
+        return ResponseEntity.ok(new ApiResponse<>(true,"Saving account saved successfully",bankAccountMapperImp.toSavingAccountDTO(savedSavingAccount)));
     }
 
     @Override
-    public BankAccount getBankAccount(String bankAccountId) throws BankAccountNotFoundException {
-        return bankAccountRepository.findById(bankAccountId).orElseThrow(()-> new BankAccountNotFoundException("Bank account not found"));
+    public ResponseEntity<ApiResponse<BankAccountDTO>> getBankAccount(String bankAccountId) throws BankAccountNotFoundException {
+        BankAccount bankAccount = getBankAccountById(bankAccountId);
+        BankAccountDTO savedBankAccountDTO =  bankAccountMapperImp.toBankAccountDTO(bankAccount);
+        return ResponseEntity.ok(new ApiResponse<>(true,"Bank account found",savedBankAccountDTO));
     }
 
+
+
     @Override
-    public void debit(String bankAccountId, double amount, String description) throws BankAccountNotFoundException, BalanceNotSufficientException {
-        BankAccount bankAccount = this.getBankAccount(bankAccountId);
-        if(bankAccount instanceof CurrentAccount) {
-            double overDraft = ((CurrentAccount)bankAccount).getOverDraft();
-            if ( overDraft < amount) {
-                throw new BalanceNotSufficientException("Balance not sufficient to debit " + amount);
-            }else
-                ((CurrentAccount)bankAccount).setOverDraft(overDraft - amount);
-        }else{
-            if(bankAccount.getBalance() < amount) {
+    public ResponseEntity<ApiResponse<Void>> debit(String bankAccountId, double amount, String description)
+            throws BankAccountNotFoundException, BalanceNotSufficientException {
+
+        BankAccount bankAccount = getBankAccountById(bankAccountId);
+
+        if (bankAccount instanceof CurrentAccount) {
+            double overDraft = ((CurrentAccount) bankAccount).getOverDraft();
+            if (bankAccount.getBalance() + overDraft < amount) {
+                throw new BalanceNotSufficientException("Insufficient funds: Tried to debit " + amount +
+                        ", but only " + (bankAccount.getBalance() + overDraft) + " available.");
+            }
+        } else {
+            if (bankAccount.getBalance() < amount) {
                 throw new BalanceNotSufficientException("Balance not sufficient");
             }
         }
@@ -112,15 +124,20 @@ public class BankAccountServiceImp implements BankAccountService {
                 .amount(amount)
                 .type(OperationType.DEBIT)
                 .date(new Date())
+                .description(description)
                 .build();
         accountOperationRepository.save(accountOperation);
+
         bankAccount.setBalance(bankAccount.getBalance() - amount);
         bankAccountRepository.save(bankAccount);
+
+        return ResponseEntity.ok(new ApiResponse<>(true, "Debit operation has been performed successfully"));
     }
 
+
     @Override
-    public void credit(String bankAccountId, double amount, String description) throws  BankAccountNotFoundException {
-        BankAccount bankAccount = this.getBankAccount(bankAccountId);
+    public ResponseEntity<ApiResponse<Void>> credit(String bankAccountId, double amount, String description) throws  BankAccountNotFoundException {
+        BankAccount bankAccount = getBankAccountById(bankAccountId);
 
         AccountOperation accountOperation = AccountOperation
                 .builder()
@@ -132,17 +149,31 @@ public class BankAccountServiceImp implements BankAccountService {
         accountOperationRepository.save(accountOperation);
         bankAccount.setBalance(bankAccount.getBalance() + amount);
         bankAccountRepository.save(bankAccount);
+        return ResponseEntity.ok(new ApiResponse<>(true,"credit operation has been performed successfully"));
     }
 
     @Override
-    public void transfer(String accountSourceId, String accountDestinationId, double amount) throws BankAccountNotFoundException, BalanceNotSufficientException {
+    public ResponseEntity<ApiResponse<Void>> transfer(String accountSourceId, String accountDestinationId, double amount) throws BankAccountNotFoundException, BalanceNotSufficientException {
         debit(accountSourceId,amount,"Transfer to "+accountDestinationId);
         credit(accountDestinationId,amount,"Transfer from "+accountSourceId);
+        return ResponseEntity.ok(new ApiResponse<>(true,"Money has been transferred to " + accountDestinationId +" successfully"));
     }
 
     @Override
-    public List<BankAccount> getAllBankAccounts(){
-        return bankAccountRepository.findAll();
+    public ResponseEntity<ApiResponse<List<BankAccountDTO>>>  getAllBankAccounts(){
+        List<BankAccount> bankAccounts=  bankAccountRepository.findAll();
+        List<BankAccountDTO> bankAccountDTOS = bankAccounts.stream().map(bankAccountMapperImp::toBankAccountDTO).toList();
+        return bankAccountDTOS.isEmpty()? ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false,"List of customers is empty"))
+                :ResponseEntity.ok(new ApiResponse<>(true,"List of accounts",bankAccountDTOS)) ;
+
+    }
+
+    private BankAccount getBankAccountById(String bankAccountId) throws BankAccountNotFoundException {
+        return bankAccountRepository.findById(bankAccountId).orElseThrow(() -> new BankAccountNotFoundException("Bank account not found"));
+    }
+
+    private Customer getCustomerById(Long customerId) throws CustomerNotFoundException {
+        return customerRepository.findById(customerId).orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
     }
 
 
