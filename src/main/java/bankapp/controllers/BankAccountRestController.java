@@ -1,7 +1,12 @@
 package bankapp.controllers;
 
+import bankapp.dtos.AccountOperationDTO;
 import bankapp.dtos.BankAccountDTO;
+import bankapp.dtos.CurrentAccountDTO;
+import bankapp.dtos.SavingAccountDTO;
+import bankapp.exceptions.BalanceNotSufficientException;
 import bankapp.exceptions.BankAccountNotFoundException;
+import bankapp.exceptions.CustomerNotFoundException;
 import bankapp.services.BankAccountService;
 import bankapp.utils.ApiResponse;
 import lombok.AllArgsConstructor;
@@ -28,6 +33,12 @@ public class BankAccountRestController {
         return bankAccountService.getAllBankAccounts();
     }
 
+    @GetMapping("{bankAccountId}/operations")
+    ResponseEntity<ApiResponse<List<AccountOperationDTO>>> getBankAccountHistory(String bankAccountId)  {
+        return bankAccountService.getAccountOperations(bankAccountId);
+    }
+
+
 //    ResponseEntity<ApiResponse<CurrentAccountDTO>> saveCurrentAccount(double initialBalance, double overDraft, Long  customerId) throws CustomerNotFoundException {
 //
 //    }
@@ -35,7 +46,7 @@ public class BankAccountRestController {
 //    ResponseEntity<ApiResponse<SavingAccountDTO>>  saveSavingAccount(double initialBalance, double interestRate, Long customerId) throws CustomerNotFoundException {
 //
 //    }
-
+//
 //    ResponseEntity<ApiResponse<Void>> debit(String bankAccountId,double amount,String description) throws  BankAccountNotFoundException, BalanceNotSufficientException {
 //
 //    }

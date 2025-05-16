@@ -10,10 +10,12 @@ import bankapp.enums.OperationType;
 import bankapp.exceptions.BalanceNotSufficientException;
 import bankapp.exceptions.BankAccountNotFoundException;
 import bankapp.mappers.BankAccountMapperImp;
+import bankapp.mappers.CustomerMapperImp;
 import bankapp.repositories.AccountOperationRepository;
 import bankapp.repositories.BankAccountRepository;
 import bankapp.repositories.CustomerRepository;
 import bankapp.services.BankAccountService;
+import bankapp.services.CustomerService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,15 +37,15 @@ public class Main {
 
 
     @Bean
-    CommandLineRunner commandLineRunner1(BankAccountMapperImp bankAccountMapperImp, BankAccountService bankAccountService, BankAccountRepository bankAccountRepository, CustomerRepository customerRepository, AccountOperationRepository accountOperationRepository) {
+    CommandLineRunner commandLineRunner1(CustomerService customerService, BankAccountMapperImp bankAccountMapperImp, BankAccountService bankAccountService, BankAccountRepository bankAccountRepository, CustomerRepository customerRepository, AccountOperationRepository accountOperationRepository) {
         return args -> {
             Stream.of("Hassan","Karima","Jamal").forEach(name -> {
                 CustomerDTO customer = new CustomerDTO();
                 customer.setName(name);
                 customer.setEmail(name+"@gmail.com");
-                bankAccountService.saveCustomer(customer);
+                customerService.saveCustomer(customer);
 
-                bankAccountService.getAllCustomers().getBody().getData().forEach(c ->{
+                customerService.getAllCustomers().getBody().getData().forEach(c ->{
                     CurrentAccountDTO currentAccount = new CurrentAccountDTO();
                     currentAccount.setCustomer(c);
                     currentAccount.setId(UUID.randomUUID().toString());
@@ -82,7 +84,7 @@ public class Main {
 
 
             });
-            List<CustomerDTO> customerDTOList = bankAccountService.getAllCustomers().getBody().getData();
+            List<CustomerDTO> customerDTOList = customerService.getAllCustomers().getBody().getData();
             customerDTOList.forEach(c->{
 
                 try {

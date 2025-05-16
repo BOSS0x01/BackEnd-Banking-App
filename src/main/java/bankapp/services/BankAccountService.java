@@ -1,8 +1,8 @@
 package bankapp.services;
 
+import bankapp.dtos.AccountOperationDTO;
 import bankapp.dtos.BankAccountDTO;
 import bankapp.dtos.CurrentAccountDTO;
-import bankapp.dtos.CustomerDTO;
 import bankapp.dtos.SavingAccountDTO;
 import bankapp.exceptions.BalanceNotSufficientException;
 import bankapp.exceptions.BankAccountNotFoundException;
@@ -13,11 +13,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface BankAccountService {
-    ResponseEntity<ApiResponse<CustomerDTO>>  saveCustomer(CustomerDTO customerDTO) ;
-    ResponseEntity<ApiResponse<List<CustomerDTO>>> getAllCustomers();
-    ResponseEntity<ApiResponse<Void>> deleteCustomer(Long customerId) throws CustomerNotFoundException;
-    ResponseEntity<ApiResponse<CustomerDTO>> getCustomer(Long customerId) throws CustomerNotFoundException;
-
     ResponseEntity<ApiResponse<CurrentAccountDTO>>  saveCurrentAccount(double initialBalance, double overDraft, Long  customerId) throws CustomerNotFoundException ;
     ResponseEntity<ApiResponse<SavingAccountDTO>>  saveSavingAccount(double initialBalance, double interestRate, Long customerId) throws CustomerNotFoundException ;
     ResponseEntity<ApiResponse<BankAccountDTO>>  getBankAccount(String bankAccountId) throws BankAccountNotFoundException;
@@ -29,4 +24,5 @@ public interface BankAccountService {
 
 
 
+    ResponseEntity<ApiResponse<List<AccountOperationDTO>>>  getAccountOperations(String accountId);
 }
