@@ -3,6 +3,7 @@ package bankapp.mappers;
 import bankapp.dtos.*;
 import bankapp.entities.*;
 import lombok.AllArgsConstructor;
+import org.hibernate.query.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -67,4 +68,15 @@ public class BankAccountMapperImp {
         BeanUtils.copyProperties(accountOperation, accountOperationDTO);
         return accountOperationDTO;
     }
+
+//    public AccountHistoryDTO toAccountHistoryDTO (Page accountOperationDTOS, BankAccount bankAccount) {
+//        AccountHistoryDTO accountHistoryDTO = new AccountHistoryDTO();
+//        accountHistoryDTO.setAccountId(bankAccount.getId());
+//        accountHistoryDTO.setAccountOperations(accountOperationDTOS);
+//        accountHistoryDTO.setBalance(bankAccount.getBalance());
+//        accountHistoryDTO.setCurrentPage(accountOperationDTO.getNumber());
+//        accountHistoryDTO.setTotalPages(accountOperations.getTotalPages());
+//        BeanUtils.copyProperties(accountOperation, accountOperationDTO);
+//        return ;
+//    }
 }

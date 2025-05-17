@@ -1,9 +1,6 @@
 package bankapp.controllers;
 
-import bankapp.dtos.AccountOperationDTO;
-import bankapp.dtos.BankAccountDTO;
-import bankapp.dtos.CurrentAccountDTO;
-import bankapp.dtos.SavingAccountDTO;
+import bankapp.dtos.*;
 import bankapp.exceptions.BalanceNotSufficientException;
 import bankapp.exceptions.BankAccountNotFoundException;
 import bankapp.exceptions.CustomerNotFoundException;
@@ -11,9 +8,7 @@ import bankapp.services.BankAccountService;
 import bankapp.utils.ApiResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,7 +19,7 @@ public class BankAccountRestController {
     private final BankAccountService bankAccountService;
 
     @GetMapping("/{bankAccountId}")
-    ResponseEntity<ApiResponse<BankAccountDTO>>  getBankAccount(String bankAccountId) throws BankAccountNotFoundException {
+    ResponseEntity<ApiResponse<BankAccountDTO>>  getBankAccount(@PathVariable String bankAccountId) throws BankAccountNotFoundException {
         return bankAccountService.getBankAccount(bankAccountId);
     }
 
@@ -33,9 +28,16 @@ public class BankAccountRestController {
         return bankAccountService.getAllBankAccounts();
     }
 
-    @GetMapping("{bankAccountId}/operations")
-    ResponseEntity<ApiResponse<List<AccountOperationDTO>>> getBankAccountHistory(String bankAccountId)  {
+    @GetMapping("/{bankAccountId}/operations")
+    ResponseEntity<ApiResponse<List<AccountOperationDTO>>> getBankAccountOperations(@PathVariable String bankAccountId)  {
         return bankAccountService.getAccountOperations(bankAccountId);
+    }
+
+    @GetMapping("/{bankAccountId}/history")
+    public ResponseEntity<ApiResponse<AccountHistoryDTO>> getAccountHistory(@PathVariable String bankAccountId,
+                                                                            @RequestParam(name = "page",defaultValue = "0") int page ,
+                                                                            @RequestParam(name = "size",defaultValue = "5") int size) throws BankAccountNotFoundException {
+        return bankAccountService.getAccountHistory(bankAccountId, page, size);
     }
 
 

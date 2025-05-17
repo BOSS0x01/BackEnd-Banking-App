@@ -12,6 +12,9 @@ import bankapp.repositories.BankAccountRepository;
 import bankapp.repositories.CustomerRepository;
 import bankapp.utils.ApiResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -146,6 +149,21 @@ public class BankAccountServiceImp implements BankAccountService {
         return ResponseEntity.ok(
                 new ApiResponse<>(true, accountOperationDTOS.isEmpty() ? "No account operations found" : "List of account operations", accountOperationDTOS)
         );
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<AccountHistoryDTO>> getAccountHistory(String accountId, int page, int size)throws BankAccountNotFoundException {
+        BankAccount bankAccount = getBankAccountById(accountId);
+        Pageable pageable = PageRequest.of(page,size);
+        Page<AccountOperation> accountOperations = accountOperationRepository.findByBankAccountId(accountId,pageable);
+        AccountHistoryDTO accountHistoryDTO = new AccountHistoryDTO();
+        accountHistoryDTO.setAccountId(accountId);
+        accountHistoryDTO.setAccountOperations(accountOperations.getContent().stream().map(bankAccountMapperImp::toAccountOperationDTO).toList());
+        accountHistoryDTO.setBalance(bankAccount.getBalance());
+        accountHistoryDTO.setCurrentPage(accountOperations.getNumber());
+        accountHistoryDTO.setTotalPages(accountOperations.getTotalPages());
+        accountHistoryDTO.setPageSize(size);
+        return ResponseEntity.ok(new ApiResponse<>(true,"List of operations", accountHistoryDTO));
     }
 
 
