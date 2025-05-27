@@ -9,11 +9,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 public interface CustomerService {
-    ResponseEntity<ApiResponse<CustomerDTO>> saveCustomer(@RequestBody CustomerDTO customerDTO);
+    ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerDTO customerDTO);
 
-    ResponseEntity<ApiResponse<List<CustomerDTO>>>  getAllCustomers();
+    ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customerDTO) throws CustomerNotFoundException;
+
+    ResponseEntity<List<CustomerDTO>>  getAllCustomers();
 
     ResponseEntity<ApiResponse<CustomerDTO>> getCustomer(Long customerId) throws CustomerNotFoundException;
 
     ResponseEntity<ApiResponse<Void>> deleteCustomer(Long customerId) throws CustomerNotFoundException;
+
+    ResponseEntity<List<CustomerDTO>> searchCustomers(String keyword);
 }

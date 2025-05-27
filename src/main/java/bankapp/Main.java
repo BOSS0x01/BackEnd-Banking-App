@@ -85,7 +85,7 @@ public class Main {
 
             });
 
-            customerService.getAllCustomers().getBody().getData().forEach(c->{
+            customerService.getAllCustomers().getBody().forEach(c->{
                 try {
                     bankAccountService.saveCurrentAccount(Math.random()*90000,9000,c.getId());
                     bankAccountService.saveSavingAccount(Math.random()*120000,5.5,c.getId());
@@ -95,7 +95,7 @@ public class Main {
                 }
             });
 
-            List<BankAccountDTO> bankAccounts = bankAccountService.getAllBankAccounts().getBody().getData();
+            List<BankAccountDTO> bankAccounts = bankAccountService.getAllBankAccounts().getBody();
             for (BankAccountDTO bankAccount:bankAccounts){
                 for (int i = 0; i <10 ; i++) {
                     String accountId;

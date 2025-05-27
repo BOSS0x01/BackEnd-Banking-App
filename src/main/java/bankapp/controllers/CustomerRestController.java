@@ -15,13 +15,19 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/customers")
+@CrossOrigin("*")
 public class CustomerRestController {
 
     private final CustomerService customerService;
 
     @GetMapping
-    ResponseEntity<ApiResponse<List<CustomerDTO>>> getAllCustomers() {
+    ResponseEntity<List<CustomerDTO>> getAllCustomers() {
         return customerService.getAllCustomers();
+    }
+
+    @GetMapping("search")
+    ResponseEntity<List<CustomerDTO>> search(@RequestParam(name="keyword",defaultValue = "") String keyword) {
+        return customerService.searchCustomers(keyword);
     }
 
     @GetMapping("/{customerId}")
@@ -31,13 +37,14 @@ public class CustomerRestController {
 
 
     @PostMapping
-    ResponseEntity<ApiResponse<CustomerDTO>> saveCustomer(@RequestBody CustomerDTO customerDTO) {
+    ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerDTO customerDTO) {
         return customerService.saveCustomer(customerDTO);
     }
 
     @PutMapping
-    ResponseEntity<ApiResponse<CustomerDTO>> updateCustomer(@RequestBody CustomerDTO customerDTO) {
-        return customerService.saveCustomer(customerDTO);
+    ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customerDTO) throws CustomerNotFoundException {
+        System.out.println(customerDTO.toString());
+        return customerService.updateCustomer(customerDTO);
     }
 
     @DeleteMapping("{customerId}")

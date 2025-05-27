@@ -36,7 +36,7 @@ public class BankAccountServiceImp implements BankAccountService {
 
 
     @Override
-    public ResponseEntity<ApiResponse<CurrentAccountDTO>>  saveCurrentAccount(double initialBalance, double overDraft, Long customerId) throws CustomerNotFoundException {
+    public ResponseEntity<CurrentAccountDTO>  saveCurrentAccount(double initialBalance, double overDraft, Long customerId) throws CustomerNotFoundException {
         Customer customer = customerRepository.findById(customerId).orElseThrow(()-> new CustomerNotFoundException("customer not found"));
         CurrentAccount currentAccount = new CurrentAccount();
         currentAccount.setId(UUID.randomUUID().toString());
@@ -45,11 +45,11 @@ public class BankAccountServiceImp implements BankAccountService {
         currentAccount.setOverDraft(overDraft);
 
         CurrentAccount savedCurrentAccount =  bankAccountRepository.save(currentAccount);
-        return ResponseEntity.ok(new ApiResponse<>(true,"Current account saved successfully",bankAccountMapperImp.toCurrentAccountDTO(savedCurrentAccount)));
+        return ResponseEntity.ok(bankAccountMapperImp.toCurrentAccountDTO(savedCurrentAccount));
     }
 
     @Override
-    public ResponseEntity<ApiResponse<SavingAccountDTO>>  saveSavingAccount(double initialBalance, double interestRate, Long customerId) throws CustomerNotFoundException {
+    public ResponseEntity<SavingAccountDTO>  saveSavingAccount(double initialBalance, double interestRate, Long customerId) throws CustomerNotFoundException {
         Customer customer = customerRepository.findById(customerId).orElseThrow(()-> new CustomerNotFoundException("customer not found"));
 
         SavingAccount savingAccount = new SavingAccount();
@@ -60,14 +60,14 @@ public class BankAccountServiceImp implements BankAccountService {
 
         SavingAccount savedSavingAccount =  bankAccountRepository.save(savingAccount);
 
-        return ResponseEntity.ok(new ApiResponse<>(true,"Saving account saved successfully",bankAccountMapperImp.toSavingAccountDTO(savedSavingAccount)));
+        return ResponseEntity.ok(bankAccountMapperImp.toSavingAccountDTO(savedSavingAccount));
     }
 
     @Override
-    public ResponseEntity<ApiResponse<BankAccountDTO>> getBankAccount(String bankAccountId) throws BankAccountNotFoundException {
+    public ResponseEntity<BankAccountDTO> getBankAccount(String bankAccountId) throws BankAccountNotFoundException {
         BankAccount bankAccount = getBankAccountById(bankAccountId);
         BankAccountDTO savedBankAccountDTO =  bankAccountMapperImp.toBankAccountDTO(bankAccount);
-        return ResponseEntity.ok(new ApiResponse<>(true,"Bank account found",savedBankAccountDTO));
+        return ResponseEntity.ok(savedBankAccountDTO);
     }
 
 
@@ -132,38 +132,38 @@ public class BankAccountServiceImp implements BankAccountService {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<List<BankAccountDTO>>>  getAllBankAccounts(){
+    public ResponseEntity<List<BankAccountDTO>>  getAllBankAccounts(){
         List<BankAccount> bankAccounts=  bankAccountRepository.findAll();
         List<BankAccountDTO> bankAccountDTOS = bankAccounts.stream().map(bankAccountMapperImp::toBankAccountDTO).toList();
         return ResponseEntity.ok(
-                new ApiResponse<>(true, bankAccountDTOS.isEmpty() ? "No accounts found" : "List of accounts", bankAccountDTOS)
+                bankAccountDTOS
         );
 
     }
 
     @Override
-    public ResponseEntity<ApiResponse<List<AccountOperationDTO>>>  getAccountOperations(String accountId){
+    public ResponseEntity<List<AccountOperationDTO>>  getAccountOperations(String accountId){
         List<AccountOperation> accountOperations = accountOperationRepository.findByBankAccountId(accountId);
         System.out.println(accountOperations);
         List<AccountOperationDTO> accountOperationDTOS =accountOperations.stream().map(bankAccountMapperImp::toAccountOperationDTO).toList();
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, accountOperationDTOS.isEmpty() ? "No account operations found" : "List of account operations", accountOperationDTOS)
-        );
+        return ResponseEntity.ok(accountOperationDTOS);
     }
 
     @Override
-    public ResponseEntity<ApiResponse<AccountHistoryDTO>> getAccountHistory(String accountId, int page, int size)throws BankAccountNotFoundException {
+    public ResponseEntity<AccountHistoryDTO> getAccountHistory(String accountId, int page, int size)throws BankAccountNotFoundException {
         BankAccount bankAccount = getBankAccountById(accountId);
         Pageable pageable = PageRequest.of(page,size);
         Page<AccountOperation> accountOperations = accountOperationRepository.findByBankAccountId(accountId,pageable);
         AccountHistoryDTO accountHistoryDTO = new AccountHistoryDTO();
         accountHistoryDTO.setAccountId(accountId);
         accountHistoryDTO.setAccountOperations(accountOperations.getContent().stream().map(bankAccountMapperImp::toAccountOperationDTO).toList());
-        accountHistoryDTO.setBalance(bankAccount.getBalance());
+
+        accountHistoryDTO.setBankAccount(bankAccountMapperImp.toBankAccountDTO(bankAccount) );
+
         accountHistoryDTO.setCurrentPage(accountOperations.getNumber());
         accountHistoryDTO.setTotalPages(accountOperations.getTotalPages());
         accountHistoryDTO.setPageSize(size);
-        return ResponseEntity.ok(new ApiResponse<>(true,"List of operations", accountHistoryDTO));
+        return ResponseEntity.ok(accountHistoryDTO);
     }
 
 

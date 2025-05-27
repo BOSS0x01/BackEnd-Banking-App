@@ -14,27 +14,28 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounts")
+@CrossOrigin("*")
 @AllArgsConstructor
 public class BankAccountRestController {
     private final BankAccountService bankAccountService;
 
     @GetMapping("/{bankAccountId}")
-    ResponseEntity<ApiResponse<BankAccountDTO>>  getBankAccount(@PathVariable String bankAccountId) throws BankAccountNotFoundException {
+    ResponseEntity<BankAccountDTO>  getBankAccount(@PathVariable String bankAccountId) throws BankAccountNotFoundException {
         return bankAccountService.getBankAccount(bankAccountId);
     }
 
     @GetMapping
-    ResponseEntity<ApiResponse<List<BankAccountDTO>>>  getAllBankAccounts() {
+    ResponseEntity<List<BankAccountDTO>>  getAllBankAccounts() {
         return bankAccountService.getAllBankAccounts();
     }
 
     @GetMapping("/{bankAccountId}/operations")
-    ResponseEntity<ApiResponse<List<AccountOperationDTO>>> getBankAccountOperations(@PathVariable String bankAccountId)  {
+    ResponseEntity<List<AccountOperationDTO>> getBankAccountOperations(@PathVariable String bankAccountId)  {
         return bankAccountService.getAccountOperations(bankAccountId);
     }
 
     @GetMapping("/{bankAccountId}/history")
-    public ResponseEntity<ApiResponse<AccountHistoryDTO>> getAccountHistory(@PathVariable String bankAccountId,
+    public ResponseEntity<AccountHistoryDTO> getAccountHistory(@PathVariable String bankAccountId,
                                                                             @RequestParam(name = "page",defaultValue = "0") int page ,
                                                                             @RequestParam(name = "size",defaultValue = "5") int size) throws BankAccountNotFoundException {
         return bankAccountService.getAccountHistory(bankAccountId, page, size);
